@@ -152,8 +152,8 @@ const EditProfile = () => {
                                         value={Role}
                                         onChange={(e) => setRole(e.target.value)}
                                     >
-                                        <option value="user">User</option>
-                                        <option value="admin">Admin</option>
+                                        <option value="student">student</option>
+                                        <option value="instructor">instructor</option>
                                     </select>
                                 </div>
                             </div>
