@@ -36,8 +36,8 @@ export const createCheckoutSession = async (req, res) => {
                 },
             ],
             mode: 'payment',
-            success_url: `${process.env.CLIENT_URL}/course-success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.CLIENT_URL}/course-detail/${courseId}?canceled=true`,
+            success_url: `https://lms-app-frontend.onrender.com/course-progress/${courseId}?success=true`,
+            cancel_url: `https://lms-app-frontend.onrender.com/course-detail/${courseId}?canceled=true`,
             metadata: {
                 courseId: courseId,
                 userId: userId,
