@@ -10,6 +10,7 @@ export const createCheckoutSession = async (req, res) => {
     try {
         const userId = req.id;
         const { courseId } = req.body;
+
         const course = await Course.findById(courseId);
         if (!course) {
             return res.status(404).json({
@@ -17,10 +18,10 @@ export const createCheckoutSession = async (req, res) => {
                 message: "Course not found!"
             });
         }
-        // creating a checkout session
+
+        // Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            mode: 'payment',
             line_items: [
                 {
                     price_data: {
@@ -35,23 +36,25 @@ export const createCheckoutSession = async (req, res) => {
                 },
             ],
             mode: 'payment',
-            success_url: `https://lms-app-frontend.onrender.com/course-progress/${courseId}?success=true`,
-            cancel_url: `https://lms-app-frontend.onrender.com/course-detail/${courseId}?canceled=true`,
+            success_url: `${process.env.CLIENT_URL}/course-success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.CLIENT_URL}/course-detail/${courseId}?canceled=true`,
             metadata: {
                 courseId: courseId,
                 userId: userId,
             },
             shipping_address_collection: {
-                allowed_countries: ['IN'],   //restricting to only India
+                allowed_countries: ['IN'],
             },
         });
+
         if (!session.url) {
             return res.status(400).json({
                 success: false,
                 message: "Failed to create checkout session!"
             });
         }
-        // creating a new purchase record
+
+        // 1. Create a pending purchase
         const newPurchase = await CoursePurchase.create({
             courseId: courseId,
             userId: userId,
@@ -59,19 +62,34 @@ export const createCheckoutSession = async (req, res) => {
             status: "pending",
             paymentId: session.id,
         });
+
+        // 2. Immediately update course enrolled students
+        await Course.findByIdAndUpdate(
+            courseId,
+            { $addToSet: { enrolledStudents: userId } },
+            { new: true }
+        );
+
+        // 3. Immediately update user's enrolled courses
+        await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { enrolled_courses: courseId } },
+            { new: true }
+        );
+
         return res.status(200).json({
             success: true,
-            url: session.url,   // redirecting to the checkout page
+            url: session.url,
         });
+
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return res.status(500).json({
             success: false,
             message: "Internal server error!"
         });
     }
-
-}
+};
 
 export const webhook = async (req, res) => {
     let event;
