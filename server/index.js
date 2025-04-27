@@ -21,13 +21,10 @@ connectDB()
 //default middleware
 app.use(express.json());
 app.use(cookieParser());
-const allowedOrigins = [
-    'http://localhost:5173',                 //  local dev
-    'https://lms-app-frontend.onrender.com'   //  deployed frontend
-];
+
   
 app.use(cors({
-  origin: allowedOrigins,
+  origin: 'https://lms-app-frontend.onrender.com' ,
   credentials: true
 }));
 
