@@ -44,10 +44,10 @@ const EditProfile = () => {
     useEffect(() => {
         if(updateUserIsSuccess) {
             refetch();
-            toast.success(updateUserData.message||"Profile updated successfully!");
+            toast.success(updateUserData?.message||"Profile updated successfully!");
         }
         if(updateUserIsError) {
-            toast.error(updateUserError.message||"Failed to update profile!");
+            toast.error(updateUserError?.message||"Failed to update profile!");
         }    
     }, [updateUserData, updateUserIsLoading, updateUserIsSuccess, updateUserIsError])
     
