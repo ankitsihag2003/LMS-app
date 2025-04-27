@@ -13,7 +13,7 @@ const app = express()
 
 dotenv.config({})
 
-const port = process.env.PORT
+const port = process.env.PORT || 8080;
 
 // database connection
 connectDB()   
@@ -24,7 +24,7 @@ app.use(cookieParser());
 
   
 app.use(cors({
-  origin: 'http://localhost:5173' ,
+  origin: 'https://lms-app-frontend.onrender.com' ,
   credentials: true
 }));
 
