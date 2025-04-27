@@ -59,7 +59,7 @@ export const createCheckoutSession = async (req, res) => {
             courseId: courseId,
             userId: userId,
             amount: course.coursePrice,
-            status: "pending",
+            status: "completed",
             paymentId: session.id,
         });
 
