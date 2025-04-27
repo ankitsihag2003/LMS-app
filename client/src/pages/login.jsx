@@ -31,20 +31,20 @@ const Login=()=> {
 
   useEffect(() => {
     if (registerIsSuccess && registerData) {
-      toast.success(registerData.message || "Registration successful.");
+      toast.success(registerData?.message || "Registration successful.");
     }
     if (registerError) {
-      toast.error(registerError.data.message || "Sign up failed.");
+      toast.error(registerError?.data?.message || "Sign up failed.");
     }
   }, [registerIsSuccess, registerData, registerError]);
 
   useEffect(() => {
     if (loginIsSuccess && loginData) {
-      toast.success(loginData.message || "Logged in.");
+      toast.success(loginData?.message || "Logged in.");
       navigate("/");
     }
     if (loginError) {
-      toast.error(loginError.data.message || "Sign in failed.");
+      toast.error(loginError?.data?.message || "Sign in failed.");
     }
   }, [loginIsSuccess, loginData, loginError]);
   
