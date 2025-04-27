@@ -98,7 +98,7 @@ export const getUserProfile=async (req,res)=>{
 }
 export const updateUserProfile=async (req,res)=>{
     const user_id = req.id;
-    const {name} = req.body;
+    const {name,roles} = req.body;
     const profilePhoto = req.file;
     const user = await User.findById(user_id);
     if(!user){
@@ -120,7 +120,7 @@ export const updateUserProfile=async (req,res)=>{
         });
     }
     const photoUrl = uploadResponse.secure_url;
-    const updatedUser = {name,photoUrl};
+    const updatedUser = {name,roles,photoUrl};
     // Update user in database  
     await User.findByIdAndUpdate(user_id,updatedUser,{new:true}).select("-password");
     return res.status(200).json({

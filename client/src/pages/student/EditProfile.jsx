@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Loader2 } from "lucide-react";
 
-import React, { useState,useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Course from "./Course";
 import { useGetUserQuery, useUpdateUserMutation } from "@/features/api/authApi";
 import { toast } from "sonner";
@@ -19,9 +19,10 @@ import { toast } from "sonner";
 const EditProfile = () => {
     const [name, setname] = useState("");
     const [profilePhoto, setprofilePhoto] = useState("")
+    const [Role, setRole] = useState("")
 
-    const { data, isLoading, error,refetch } = useGetUserQuery();
-    const [updateUser,{data:updateUserData,isLoading:updateUserIsLoading,isSuccess:updateUserIsSuccess,isError:updateUserIsError,error:updateUserError}] = useUpdateUserMutation();
+    const { data, isLoading, error, refetch } = useGetUserQuery();
+    const [updateUser, { data: updateUserData, isLoading: updateUserIsLoading, isSuccess: updateUserIsSuccess, isError: updateUserIsError, error: updateUserError }] = useUpdateUserMutation();
 
     const onChangeHandler = (e) => {
         const file = e.target.files[0];
@@ -29,28 +30,30 @@ const EditProfile = () => {
             setprofilePhoto(file);
         }
     }
-    const updateUserHandler =async () => {
+    const updateUserHandler = async () => {
         const formData = new FormData();
         formData.append("name", name);
+        formData.append("roles", Role);
         if (profilePhoto) {
             formData.append("profilePhoto", profilePhoto);
         }
         await updateUser(formData);
     }
+
     useEffect(() => {
-      refetch();
+        refetch();
     }, [])
-    
+
     useEffect(() => {
-        if(updateUserIsSuccess) {
+        if (updateUserIsSuccess) {
             refetch();
-            toast.success(updateUserData?.message||"Profile updated successfully!");
+            toast.success(updateUserData?.message || "Profile updated successfully!");
         }
-        if(updateUserIsError) {
-            toast.error(updateUserError?.message||"Failed to update profile!");
-        }    
+        if (updateUserIsError) {
+            toast.error(updateUserError?.message || "Failed to update profile!");
+        }
     }, [updateUserData, updateUserIsLoading, updateUserIsSuccess, updateUserIsError])
-    
+
 
     if (isLoading) {
         return (
@@ -139,9 +142,23 @@ const EditProfile = () => {
                                         </label>
                                     </div>
                                 </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <label htmlFor="role" className="text-right">
+                                        Role
+                                    </label>
+                                    <select
+                                        id="role"
+                                        className="col-span-3 border rounded px-2 py-1"
+                                        value={Role}
+                                        onChange={(e) => setRole(e.target.value)}
+                                    >
+                                        <option value="user">User</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
                             </div>
                             <DialogFooter>
-                                <Button disabled={updateUserIsLoading} onClick={updateUserHandler}  type="submit">
+                                <Button disabled={updateUserIsLoading} onClick={updateUserHandler} type="submit">
                                     {
                                         updateUserIsLoading ?
                                             <><Loader2 className="animate-spin" />Please Wait</> : "Save"
