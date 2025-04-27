@@ -74,75 +74,67 @@ export const createCheckoutSession = async (req, res) => {
 }
 
 export const webhook = async (req, res) => {
+    const endpointSecret = process.env.WEBHOOK_ENDPOINT_SECRET; // your webhook signing secret
+
+    const sig = req.headers['stripe-signature']; // real signature from Stripe
+
     let event;
     try {
-        const payloadString = JSON.stringify(req.body, null, 2);
-        const secret = process.env.WEBHOOK_ENDPOINT_SECRET;
-
-        const header = stripe.webhooks.generateTestHeaderString({
-            payload: payloadString,
-            secret: secret,
-        });
-        event = stripe.webhooks.constructEvent(payloadString, header, secret);
-
+        event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
     } catch (error) {
-        console.log(error);
-        return res.status(400).json({
-            success: false,
-            message: "Webhook Error: " + error.message,
-        });
+        console.error('Webhook signature verification failed:', error.message);
+        return res.status(400).send(`Webhook Error: ${error.message}`);
     }
-    try {
-        //HANDLE the checkout.session.completed event
-        if (event.type === 'checkout.session.completed') {
-            const session = event.data.object;
 
-            // updating the purchase record
-            const purchase = await CoursePurchase.findOne(
-                { paymentId: session.id }).populate({path:"courseId"});
-            if(!purchase) {
-                return res.status(404).json({
-                    success: false,
-                    message: "Purchase not found!"
-                });
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+        const paymentId = session.id;
+
+        try {
+            const purchase = await CoursePurchase.findOne({ paymentId }).populate("courseId");
+
+            if (!purchase) {
+                console.error('Purchase not found for session:', paymentId);
+                return res.status(404).json({ success: false, message: "Purchase not found!" });
             }
-            if(session.amount_total){
-                purchase.amount = session.amount_total / 100; // converting to INR
+
+            if (session.amount_total) {
+                purchase.amount = session.amount_total / 100; // Stripe sends amount in smallest currency
             }
             purchase.status = "completed";
 
-            // update lecture preview after purchase
-            if(purchase.courseId && purchase.courseId.lectures.length > 0){
+            // Optional: unlock lectures
+            if (purchase.courseId && purchase.courseId.lectures.length > 0) {
                 await Lecture.updateMany(
-                    {_id:{$in: purchase.courseId.lectures}},
-                    {$set:{isPreviewFree:true}}
+                    { _id: { $in: purchase.courseId.lectures } },
+                    { $set: { isPreviewFree: true } }
                 );
             }
+
             await purchase.save();
-            //update course enrolled students
+
+            // Update enrolled students
             await Course.findByIdAndUpdate(
                 purchase.courseId._id,
-                {$addToSet:{enrolledStudents:purchase.userId}},
-                {new:true},
+                { $addToSet: { enrolledStudents: purchase.userId } }
             );
-            //update user enrolled courses
             await User.findByIdAndUpdate(
                 purchase.userId,
-                {$addToSet:{enrolled_courses:purchase.courseId._id}},
-                {new:true}
+                { $addToSet: { enrolled_courses: purchase.courseId._id } }
             );
 
-            
+            console.log('✅ Purchase updated successfully for session:', paymentId);
+
+            res.status(200).json({ received: true });
+        } catch (error) {
+            console.error('Error handling checkout.session.completed:', error.message);
+            res.status(500).send();
         }
-        res.status(200).send();
-    } catch (error) {
-        console.log(error);
-        return res.status(400).json({
-            success: false,
-            message: "Webhook Error: " + error.message,
-        });
+    } else {
+        res.status(400).send('Unhandled event type');
     }
-}
+};
+
 export const getCourseDetailWithPurchaseStatus = async (req,res)=>{
     try {
         const {courseId} = req.params;
