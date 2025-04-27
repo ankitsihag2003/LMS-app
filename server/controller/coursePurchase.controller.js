@@ -86,7 +86,11 @@ export const webhook = async (req, res) => {
         event = stripe.webhooks.constructEvent(payloadString, header, secret);
 
     } catch (error) {
-        return res.status(400).send(`Webhook Error: ${error.message}`);
+        console.log(error);
+        return res.status(400).json({
+            success: false,
+            message: "Webhook Error: " + error.message,
+        });
     }
     try {
         //HANDLE the checkout.session.completed event
@@ -132,7 +136,11 @@ export const webhook = async (req, res) => {
         }
         res.status(200).send();
     } catch (error) {
-        return res.status(400).send(`Webhook Error: ${error.message}`);
+        console.log(error);
+        return res.status(400).json({
+            success: false,
+            message: "Webhook Error: " + error.message,
+        });
     }
 }
 export const getCourseDetailWithPurchaseStatus = async (req,res)=>{
