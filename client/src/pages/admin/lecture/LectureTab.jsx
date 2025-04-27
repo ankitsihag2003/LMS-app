@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 
-const MEDIA_URL = "http://localhost:8080/api/v1/media";
+const MEDIA_URL = "https://lms-app-backend-qmqx.onrender.com/media";
 
 const LectureTab = () => {
     const params = useParams();
